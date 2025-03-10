@@ -36,14 +36,15 @@ DATABASES = {
     }
 }
 
+from config.log_utils import JSONFormatter, JSONSocketHandler
+
 # Logger
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "json": {
-            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
-            "fmt": "%(levelname)s %(asctime)s %(name)s %(module)s %(lineno)d %(message)s",
+            "()": JSONFormatter,
         },
         "timestamp": {
             "format": "{asctime} {levelname} {message}",
@@ -58,7 +59,13 @@ LOGGING = {
         "file": {
             "level": "INFO",
             "class": "logging.FileHandler",
-            "filename": "logs/log.django",
+            "filename": "logs/django.jsonl",
+            "formatter": "json",
+        },
+        "tcp": {
+            "class": "config.log_utils.JSONSocketHandler",
+            "host": "logstash",
+            "port": 5044,
             "formatter": "json",
         },
     },
@@ -69,7 +76,7 @@ LOGGING = {
             "propagate": True,
         },
         "django": {
-            "handlers": ["file"],
+            "handlers": ["tcp"],
             "level": "INFO",
         },
     },
