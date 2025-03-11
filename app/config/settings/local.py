@@ -36,7 +36,7 @@ DATABASES = {
     }
 }
 
-from config.log_utils import JSONFormatter, JSONSocketHandler
+from config.log_utils import JSONFormatter, RequestFilter, JSONSocketHandler
 
 # Logger
 LOGGING = {
@@ -51,6 +51,11 @@ LOGGING = {
             "style": "{",
         },
     },
+    "filters": {
+        "request_filter": {
+            "()": RequestFilter,
+        },
+    },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
@@ -63,10 +68,12 @@ LOGGING = {
             "formatter": "json",
         },
         "tcp": {
+            "level": "INFO",
             "class": "config.log_utils.JSONSocketHandler",
             "host": "logstash",
             "port": 5044,
             "formatter": "json",
+            "filters": ["request_filter"],
         },
     },
     "loggers": {
@@ -78,6 +85,7 @@ LOGGING = {
         "django": {
             "handlers": ["tcp"],
             "level": "INFO",
+            "propagate": True,
         },
     },
 }
