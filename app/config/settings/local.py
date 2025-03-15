@@ -75,6 +75,10 @@ LOGGING = {
             "formatter": "json",
             "filters": ["request_filter"],
         },
+        "apm": {  # Elastic APM 로그 핸들러
+            "level": "INFO",
+            "class": "elasticapm.handlers.logging.LoggingHandler",
+        },
     },
     "loggers": {
         "console": {
@@ -83,7 +87,7 @@ LOGGING = {
             "propagate": True,
         },
         "django": {
-            "handlers": ["tcp"],
+            "handlers": ["tcp", "apm"],
             "level": "INFO",
             "propagate": True,
         },

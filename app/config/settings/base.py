@@ -25,6 +25,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     "corsheaders",
+    "elasticapm.contrib.django",
 ]
 
 LOCAL_APPS = []
@@ -41,6 +42,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "config.middleware.ThreadLocalRequestMiddleware",
+    "elasticapm.contrib.django.middleware.TracingMiddleware",
 ]
 
 MIDDLEWARE += ["django.middleware.gzip.GZipMiddleware"]
@@ -107,3 +109,13 @@ MEDIA_URL = "/static/media/"
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+ELASTIC_APM = {
+    "SERVICE_NAME": "DjangoTestApp",  # Kibana에서 식별할 서비스 이름
+    "SECRET_TOKEN": "",  # APM 서버에 인증이 필요하면 입력
+    "SERVER_URL": "http://apm-server:8200",  # APM 서버 주소
+    "ENVIRONMENT": "development",  # 개발/운영 환경 설정
+    "CAPTURE_BODY": "all",  # 요청 본문 캡처 (all, errors, off)
+    "TRANSACTIONS_IGNORE_PATTERNS": ["^OPTIONS "],  # 특정 패턴 제외 가능
+}

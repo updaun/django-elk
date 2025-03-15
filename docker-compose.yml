@@ -18,6 +18,7 @@ services:
       - DB_USER=devuser
       - DB_PASSWORD=password1234!
       - DJANGO_ENV_NAME=dev
+      - ELASTIC_APM_SERVER_URL=http://apm-server:8200
     depends_on:
       - db
 
@@ -57,6 +58,20 @@ services:
       - "5601:5601"
     depends_on:
       - elasticsearch
+
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:7.17.5
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
+    depends_on:
+      - elasticsearch
+    command: >
+      apm-server -e
+        -E output.elasticsearch.hosts=["http://elasticsearch:9200"]
+        -E apm-server.secret_token=""
+        -E apm-server.enabled=true
 
 volumes:
   dev-db-data:
