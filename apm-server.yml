@@ -1,13 +1,52 @@
-# apm-server.yml
-
-# APM Server의 기본 설정
 apm-server:
-  host: "0.0.0.0:8200"  # 모든 인터페이스에서 8200 포트로 수신
-  secret_token: ""      # 필요 시 secret token 설정
+  host: "0.0.0.0:8200"
+  rum:
+    enabled: true
+    allow_origins: [ "*" ]
+    profiling:
+      enabled: true
 
-# Elasticsearch로 출력하는 설정
 output.elasticsearch:
-  hosts: ["http://elasticsearch:9200"]
-  # 만약 인증이 필요하다면 아래와 같이 설정할 수 있습니다.
-  # username: "elastic"
-  # password: "changeme"
+  indices:
+    - index: "apm-7.17.5-transaction-%{+yyyy.MM.dd}"
+      when.contains:
+        processor.event: "transaction"
+
+    - index: "apm-7.17.5-span-%{+yyyy.MM.dd}"
+      when.contains:
+        processor.event: "span"
+
+    - index: "apm-7.17.5-error-%{+yyyy.MM.dd}"
+      when.contains:
+        processor.event: "error"
+
+    - index: "apm-7.17.5-metric-%{+yyyy.MM.dd}"
+      when.contains:
+        processor.event: "metric"
+
+    - index: "apm-7.17.5-profile-%{+yyyy.MM.dd}"
+      when.contains:
+        processor.event: "profile"
+
+
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 1
+
+setup.template.mappings:
+  properties:
+    service.name:
+      type: keyword
+    service.environment:
+      type: keyword
+    processor.event:
+      type: keyword
+
+logging:
+  level: info
+  to_files: true
+  files:
+    path: "/var/log/apm-server"
+    name: "apm-server"
+    keepfiles: 7
+    permissions: 0644

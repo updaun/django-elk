@@ -32,46 +32,84 @@ services:
       - POSTGRES_PASSWORD=password1234!
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.5
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - LOGSTASH_PASSWORD=${LOGSTASH_PASSWORD}
+      - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+      - APM_SERVER_PASSWORD=${APM_SERVER_PASSWORD}
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "9200:9200"
       - "9300:9300"
     volumes:
       - esdata:/usr/share/elasticsearch/data
+      - ./init-elasticsearch.sh:/usr/local/bin/init-elasticsearch.sh
+    healthcheck:
+      test: [ "CMD", "curl", "-u", "elastic:${ELASTIC_PASSWORD}", "-f", "http://elasticsearch:9200/_cluster/health?wait_for_status=yellow&timeout=5s" ]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+    entrypoint: [ "/bin/bash", "-c", "/usr/local/bin/docker-entrypoint.sh & sleep 10 && /usr/local/bin/init-elasticsearch.sh && wait" ]
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:7.17.5
+    image: docker.elastic.co/logstash/logstash:7.17.10
     ports:
       - "5044:5044"
       - "9600:9600"
     volumes:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./logs:/app/logs
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.monitoring.enabled=false
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.17.5
+    image: docker.elastic.co/kibana/kibana:7.17.10
     ports:
       - "5601:5601"
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+    healthcheck:
+      test: [ "CMD", "curl", "-u", "elastic:${ELASTIC_PASSWORD}", "-f", "http://kibana:5601/api/status" ]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 5s
 
   apm-server:
-    image: docker.elastic.co/apm/apm-server:7.17.5
+    image: docker.elastic.co/apm/apm-server:7.17.10
     ports:
       - "8200:8200"
     volumes:
       - ./apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
     command: >
       apm-server -e
-        -E output.elasticsearch.hosts=["http://elasticsearch:9200"]
-        -E apm-server.secret_token=""
-        -E apm-server.enabled=true
+        -E apm-server.secret_token=${APM_SECRET_TOKEN}
+        -E apm-server.kibana.enabled=true
+        -E apm-server.kibana.host=${APM_KIBANA_HOST}
+        -E apm-server.kibana.username="apm_server_user"
+        -E apm-server.kibana.password=${APM_SERVER_PASSWORD}
+        -E output.elasticsearch.hosts=["${APM_ELASTICSEARCH_HOST}"]
+        -E output.elasticsearch.username="apm_server_user"
+        -E output.elasticsearch.password=${APM_SERVER_PASSWORD}
 
 volumes:
   dev-db-data:
