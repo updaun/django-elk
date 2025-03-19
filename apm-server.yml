@@ -8,23 +8,23 @@ apm-server:
 
 output.elasticsearch:
   indices:
-    - index: "apm-7.17.5-transaction-%{+yyyy.MM.dd}"
+    - index: "apm-7.17.10-transaction-%{+yyyy.MM.dd}"
       when.contains:
         processor.event: "transaction"
 
-    - index: "apm-7.17.5-span-%{+yyyy.MM.dd}"
+    - index: "apm-7.17.10-span-%{+yyyy.MM.dd}"
       when.contains:
         processor.event: "span"
 
-    - index: "apm-7.17.5-error-%{+yyyy.MM.dd}"
+    - index: "apm-7.17.10-error-%{+yyyy.MM.dd}"
       when.contains:
         processor.event: "error"
 
-    - index: "apm-7.17.5-metric-%{+yyyy.MM.dd}"
+    - index: "apm-7.17.10-metric-%{+yyyy.MM.dd}"
       when.contains:
         processor.event: "metric"
 
-    - index: "apm-7.17.5-profile-%{+yyyy.MM.dd}"
+    - index: "apm-7.17.10-profile-%{+yyyy.MM.dd}"
       when.contains:
         processor.event: "profile"
 

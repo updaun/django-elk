@@ -46,10 +46,6 @@ LOGGING = {
         "json": {
             "()": JSONFormatter,
         },
-        "timestamp": {
-            "format": "{asctime} {levelname} {message}",
-            "style": "{",
-        },
     },
     "filters": {
         "request_filter": {

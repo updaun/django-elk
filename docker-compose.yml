@@ -19,6 +19,8 @@ services:
       - DB_PASSWORD=password1234!
       - DJANGO_ENV_NAME=dev
       - ELASTIC_APM_SERVER_URL=http://apm-server:8200
+    env_file:
+      - .env
     depends_on:
       - db
 
@@ -100,6 +102,8 @@ services:
         condition: service_healthy
       kibana:
         condition: service_healthy
+    env_file:
+      - .env
     command: >
       apm-server -e
         -E apm-server.secret_token=${APM_SECRET_TOKEN}
